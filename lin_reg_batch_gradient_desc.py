@@ -40,6 +40,8 @@ def fetch_batch(epoch, batch_index, batch_size):
     return X_batch, y_batch
 
 init = tf.global_variables_initializer()
+# Save to restore model later
+saver = tf.train.Saver()
 
 # Computation
 with tf.Session() as sess:
@@ -49,5 +51,5 @@ with tf.Session() as sess:
             X_batch, y_batch = fetch_batch(epoch, batch_index, batch_size)
             sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
     best_theta = theta.eval()
-
+    save_path = saver.save(sess, "/tmp/my_model_final.ckpt")
 print(best_theta)
