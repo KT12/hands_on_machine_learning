@@ -4,6 +4,12 @@ import numpy as np
 import tensorflow as tf
 from sklearn.datasets import make_moons
 from sklearn.preprocessing import StandardScaler
+from datetime import datetime
+
+# Give every run a different log directory name with timestamp
+now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+root_logdir = "tf_logs"
+logdir = "{}/run-{}/".format(root_logdir, now)
 
 # Get data
 X_moons, y_moons = make_moons(n_samples=1000, noise=0.1)
@@ -11,8 +17,8 @@ m, n = X_moons.shape
 
 # Learning parameters
 n_epochs = 1000
-learning_rate = 0.01
-batch_size = 100
+learning_rate = 0.005
+batch_size = 50
 n_batches = int(np.ceil(m / batch_size))
 
 # Transform data into usable tensors, set up theta
@@ -47,15 +53,21 @@ def fetch_batch(epoch, batch_index, batch_size):
 
 init = tf.global_variables_initializer()
 # Add saver to restore model later
-# saver = tf.train.Saver()
-
+saver = tf.train.Saver()
+mse_summary = tf.summary.scalar('MSE', mse)
+file_writer = tf.summary.FileWriter(logdir, tf.get_default_graph())
 # Computation
 with tf.Session() as sess:
     sess.run(init)
     for epoch in range(n_epochs):
         for batch_index in range(n_batches):
             X_batch, y_batch = fetch_batch(epoch, batch_index, batch_size)
+            if batch_index % 10 == 0:
+                summary_str = mse_summary.eval(feed_dict={X:X_batch, y: y_batch})
+                step = epoch * n_batches + batch_index
+                file_writer.add_summary(summary_str, step)
             sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
+            save_path =saver.save(sess, '/tmp/my_model.ckpt')
     best_theta = theta.eval()
-    # save_path = saver.save(sess, "/tmp/my_model_final.ckpt")
+    save_path = saver.save(sess, "/tmp/my_model_final.ckpt")
 print(best_theta)
