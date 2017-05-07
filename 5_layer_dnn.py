@@ -35,7 +35,8 @@ y_masked_train = y_images[indices]
 # Do same for test set
 indices_test = [idx for idx in range(len(y_images_test)) if y_images_test[idx] < 5]
 X_test = X_images_test[indices_test]
-y_test = y_images[indices_test]
+y_test = y_images_test[indices_test]
+print(y_test)
 
 # Construct graph
 # Use He initalization
@@ -66,13 +67,15 @@ with tf.name_scope('Eval'):
     correct = tf.nn.in_top_k(logits, y, 1)
     accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
 
+max_logits = tf.reduce_max(logits)
+max_labels = tf.reduce_max(y)
 init = tf.global_variables_initializer()
 
 # Execution
 
 n_epochs = 100
 batch_size = 50
-batches = len(y_masked_train//batch_size)
+batches = len(y_masked_train)//batch_size
 
 with tf.Session() as sess:
     init.run()
@@ -81,6 +84,8 @@ with tf.Session() as sess:
             X_batch = X_masked_train[k*batches:k*batches+batches]
             y_batch = y_masked_train[k*batches:k*batches+batches]
             sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
+        # print('Max logits: ', max_logits.eval(feed_dict={X: X_test}))
+        # print('Max labels: ', max_labels.eval(feed_dict={y: y_test}))
         acc_train = accuracy.eval(feed_dict={X: X_batch, y: y_batch})
         acc_test = accuracy.eval(feed_dict={X: X_test, y: y_test})
         if epoch % 10 == 0:
