@@ -9,8 +9,8 @@ from tensorflow.contrib.layers import fully_connected
 from tensorflow.examples.tutorials.mnist import input_data
 
 # Set random seed
-tf.set_random_seed(8)
-np.random.seed(8)
+tf.set_random_seed(12345)
+np.random.seed(12345)
 
 n_inputs = 28 * 28
 n_hidden_1 = 100
@@ -36,7 +36,6 @@ y_masked_train = y_images[indices]
 indices_test = [idx for idx in range(len(y_images_test)) if y_images_test[idx] < 5]
 X_test = X_images_test[indices_test]
 y_test = y_images_test[indices_test]
-print(y_test)
 
 # Construct graph
 # Use He initalization
@@ -57,7 +56,7 @@ with tf.name_scope('Loss'):
     xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits)
     loss = tf.reduce_mean(xentropy, name='Loss')
 
-learning_rate = 0.01
+learning_rate = 0.0025
 
 with tf.name_scope('Train'):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -73,21 +72,21 @@ init = tf.global_variables_initializer()
 
 # Execution
 
-n_epochs = 100
-batch_size = 50
+n_epochs = 300
+batch_size = 100
 batches = len(y_masked_train)//batch_size
 
 with tf.Session() as sess:
     init.run()
     for epoch in range(n_epochs):
         for k in range(batches):
-            X_batch = X_masked_train[k*batches:k*batches+batches]
-            y_batch = y_masked_train[k*batches:k*batches+batches]
+            X_batch = X_masked_train[k*batch_size:k*batch_size+batch_size]
+            y_batch = y_masked_train[k*batch_size:k*batch_size+batch_size]
             sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
         # print('Max logits: ', max_logits.eval(feed_dict={X: X_test}))
         # print('Max labels: ', max_labels.eval(feed_dict={y: y_test}))
         acc_train = accuracy.eval(feed_dict={X: X_batch, y: y_batch})
         acc_test = accuracy.eval(feed_dict={X: X_test, y: y_test})
-        if epoch % 10 == 0:
-            print(epoch, "Train accuracy: ", acc_train, "Test accuracy: ", acc_test)
+#        if epoch % 10 == 0:
+        print(epoch, "Train accuracy: ", acc_train, "Test accuracy: ", acc_test)
             
