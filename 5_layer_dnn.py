@@ -56,7 +56,7 @@ with tf.name_scope('Loss'):
     xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits)
     loss = tf.reduce_mean(xentropy, name='Loss')
 
-learning_rate = 0.0025
+learning_rate = 0.005
 
 with tf.name_scope('Train'):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -73,7 +73,7 @@ init = tf.global_variables_initializer()
 # Execution
 
 n_epochs = 300
-batch_size = 100
+batch_size = 200
 batches = len(y_masked_train)//batch_size
 
 with tf.Session() as sess:
