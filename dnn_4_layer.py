@@ -5,7 +5,7 @@ from tensorflow.contrib.layers import fully_connected
 
 tf.set_random_seed(5)
 
-n_inputs = 28* 28
+n_inputs = 28 * 28
 n_hidden_1 = 128
 n_hidden_2 = 64
 n_hidden_3 = 32
