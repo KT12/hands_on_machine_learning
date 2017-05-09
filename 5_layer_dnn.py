@@ -43,9 +43,7 @@ validation_metrics = {
     "accuracy":
         tf.contrib.learn.MetricSpec(
             metric_fn=tf.contrib.metrics.streaming_accuracy,
-            prediction_key=tf.contrib.learn.prediction_key.PredictionKey.
-            CLASSES),
-}
+            prediction_key=tf.contrib.learn.prediction_key.PredictionKey.CLASSES)}
 
 validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
     x=X_test, y=y_test, early_stopping_rounds=50, metrics=validation_metrics)
