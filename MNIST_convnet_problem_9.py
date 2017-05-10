@@ -4,6 +4,11 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 
+# Set random seed
+
+np.random.seed(123456)
+tf.set_random_seed(123456)
+
 # Get data
 mnist = input_data.read_data_sets("/tmp/data")
 
