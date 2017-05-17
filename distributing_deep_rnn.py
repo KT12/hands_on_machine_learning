@@ -1,3 +1,5 @@
+# Class for TF distributed deep RNN
+
 import tensorflow as tf
 
 class DeviceCellWrapper(tf.contrib.rnn.RNNCell):
