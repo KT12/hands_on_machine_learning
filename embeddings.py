@@ -34,7 +34,7 @@ print(words[:5])
 # Build Dictionary
 print('Buliding Dictionary')
 
-vocabulary_size = 25000
+vocabulary_size = 35000
 
 vocabulary = [("UNK", None)] + Counter(words).most_common(vocabulary_size - 1)
 vocabulary = np.array([word for word, _ in vocabulary])
@@ -83,7 +83,7 @@ print('Building model')
 
 batch_size = 128
 embedding_size = 128 # Dim of embedding vector
-skip_window = 1 # How many words to look at on left and right
+skip_window = 3 # How many words to look at on left and right
 num_skips = 2 # Times to reuse an input to generate label
 
 # Use random validation set
@@ -96,52 +96,52 @@ num_sampled = 64
 
 learning_rate = 0.01
 
-# Input data
-train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
-valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
+with tf.device("/cpu:0"):
+    # Input data
+    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+    train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
+    valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
 
-# Look up embeddings for inputs
-init_embeddings = tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0)
-embeddings = tf.Variable(init_embeddings)
-embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+    # Look up embeddings for inputs
+    init_embeddings = tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0)
+    embeddings = tf.Variable(init_embeddings)
+    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
 
-# Construct the variables for the NCE loss
-nce_weights = tf.Variable(tf.truncated_normal([vocabulary_size, embedding_size],
+    # Construct the variables for the NCE loss
+    nce_weights = tf.Variable(tf.truncated_normal([vocabulary_size, embedding_size],
         stddev=1.0 / np.sqrt(embedding_size)))
-nce_biases = tf.Variable(tf.zeros([vocabulary_size]))
+    nce_biases = tf.Variable(tf.zeros([vocabulary_size]))
 
-# Compute the avg NCE loss for the batch
-# tf.nce_loss automatically draws a new sample of negative labels
-# each time the loss is evaluated
+    # Compute the avg NCE loss for the batch
+    # tf.nce_loss automatically draws a new sample of negative labels
+    # each time the loss is evaluated
 
-loss = tf.reduce_mean(tf.nn.nce_loss(nce_weights, nce_biases, train_labels,
-    embed, num_sampled, vocabulary_size))
+    loss = tf.reduce_mean(tf.nn.nce_loss(nce_weights, nce_biases, train_labels,
+        embed, num_sampled, vocabulary_size))
 
-# Construct AdamOptimizer
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-training_op = optimizer.minimize(loss)
+    # Construct AdamOptimizer
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    training_op = optimizer.minimize(loss)
 
-# Compute the cosine similarity between minibatch examples and all embeddings
-norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), axis=1, keep_dims=True))
-normalized_embeddings = embeddings /norm
-valid_embeddings = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
-similarity = tf.matmul(valid_embeddings, normalized_embeddings, transpose_b=True)
+    # Compute the cosine similarity between minibatch examples and all embeddings
+    norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), axis=1, keep_dims=True))
+    normalized_embeddings = embeddings /norm
+    valid_embeddings = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
+    similarity = tf.matmul(valid_embeddings, normalized_embeddings, transpose_b=True)
 
-init = tf.global_variables_initializer()
+    init = tf.global_variables_initializer()
 
 # Train the model
 print('Training model')
 
 num_steps = 10001
-with tf.device("/cpu:0"):
 
-  with tf.Session() as sess:
+with tf.Session() as sess:
     init.run()
 
     avg_loss = 0
     for step in range(num_steps):
-        print("\rIteration: {}".format(step), end='\t')
+        # print("\rIteration: {}".format(step), end='\t')
         batch_inputs, batch_labels = generate_batch(batch_size, num_skips, skip_window)
         feed_dict = {train_inputs: batch_inputs, train_labels: batch_labels}
 
